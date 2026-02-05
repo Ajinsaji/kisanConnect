@@ -1,0 +1,23 @@
+
+# Web Framework
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+
+# Database ORM & Driver
+SQLAlchemy==2.0.36
+psycopg2-binary==2.9.10
+
+# Authentication & Securityp
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Data Validation & Settings
+pydantic==2.9.2
+pydantic-settings==2.6.1
+
+# RSS Feed Parsing
+feedparser==6.0.11
+beautifulsoup4==4.12.3
+requests==2.31.0
+
+

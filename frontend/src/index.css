@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+
+  .card {
+    @apply bg-white p-8 rounded-2xl shadow-xl;
+  }
+
+  .input-field {
+    @apply w-full mt-4 px-4 py-3 border rounded-lg 
+           text-sm focus:outline-none focus:ring-2 
+           focus:ring-primary border-gray-300;
+  }
+
+  .btn-primary {
+    @apply w-full mt-6 py-3 rounded-lg 
+           bg-primary text-white font-semibold 
+           hover:bg-white transition 
+           hover:text-primaryDark;
+  }
+  .btn-primary-sm {
+  @apply px-4 py-1 rounded-md 
+         bg-primary text-white text-sm font-medium 
+         hover:bg-white hover:text-primaryDark hover:border-primaryDark border hover:scale-105
+         transition;
+}
+  .btn-secondary-sm {
+  @apply px-4 py-1 rounded-md 
+         bg-white text-primary text-sm font-medium border border-primaryDark
+         hover:bg-light hover:scale-105
+         transition;
+}
+
+  .link {
+    @apply text-primary font-medium cursor-pointer;
+  }
+}
+
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeSlide {
+  animation: fadeSlide 0.25s ease-out;
+}
+
+.step-wrapper {
+  display: grid;
+  overflow: hidden;
+  transition: grid-template-rows 300ms ease;
+}
+
+.step-open {
+  grid-template-rows: 1fr;
+}
+
+.step-closed {
+  grid-template-rows: 0fr;
+}
+
+.step-content {
+  overflow: hidden;
+  transform: translateX(20px);
+  opacity: 0;
+  transition: transform 250ms ease, opacity 200ms ease;
+}
+
+.step-open .step-content {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+
+.font-logo { font-family: "Forum", serif; font-weight: 700;  }

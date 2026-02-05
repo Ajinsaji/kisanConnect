@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: kisanconnect-api
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 60
+      - key: ALGORITHM
+        value: HS256
+      - key: DEBUG
+        value: "False"
+      - key: CORS_ORIGINS
+        value: "http://localhost:3000"
+
+databases:
+  - name: kisanconnect-db
+    plan: free
+    databaseName: kisanconnect
+    user: kisanconnect_user
