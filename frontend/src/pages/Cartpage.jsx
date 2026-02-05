@@ -4,6 +4,7 @@ import CustomerNavbar from "../components/CustomerNavbar";
 import Footer from "../components/Footer";
 import Toast from "../components/Toast";
 import { cartAPI } from "../services/api";
+import { getFileUrl } from "../config";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -157,7 +158,7 @@ function Cart() {
                       {/* Image */}
                       <img
                         src={item.product.image_url && !item.product.image_url.startsWith('blob:')
-                          ? item.product.image_url
+                          ? (item.product.image_url.startsWith('/') ? getFileUrl(item.product.image_url) : item.product.image_url)
                           : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Crect fill='%23e5e7eb' width='96' height='96'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='12' fill='%236b7280' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E"}
                         alt={item.product.name}
                         onError={(e) => {

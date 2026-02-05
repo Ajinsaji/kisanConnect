@@ -3,6 +3,7 @@ import Toast from "../components/Toast";
 import { useState, useEffect } from "react";
 import Modal from "../components/Modal";
 import { productsAPI } from "../services/api";
+import { getFileUrl } from "../config";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
@@ -151,12 +152,11 @@ function Inventory() {
                 {/* Image */}
                 <img
                   src={product.image_url && !product.image_url.startsWith('blob:')
-                    ? product.image_url 
+                    ? (product.image_url.startsWith('/') ? getFileUrl(product.image_url) : product.image_url)
                     : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23e5e7eb' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='14' fill='%236b7280' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E"}
                   alt={product.name}
                   className="w-full h-48 object-cover rounded-md mb-4"
                   onError={(e) => {
-                    // If image fails to load, use data URI placeholder
                     e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23e5e7eb' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='14' fill='%236b7280' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
                   }}
                 />

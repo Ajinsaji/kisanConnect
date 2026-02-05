@@ -31,20 +31,29 @@ def create_order(
     if len(products) != len(product_ids):
         raise HTTPException(status_code=400, detail="Invalid product in order")
 
+    delivery_type = (order_in.delivery_type or "delivery").strip().lower()
+    # Normalize legacy "delivery" to "schedule_delivery"
+    if delivery_type == "delivery":
+        delivery_type = "schedule_delivery"
+
     preferred_date = None
-    if order_in.preferred_date:
+    if delivery_type == "express_delivery":
+        preferred_date = datetime.utcnow().date()
+    elif order_in.preferred_date:
         try:
             preferred_date = datetime.strptime(order_in.preferred_date, "%Y-%m-%d").date()
         except ValueError:
             pass
+
     order = Order(
         buyer_id=current_user.id,
         total_amount=0,
         shipping_address=order_in.shipping_address,
         payment_method=order_in.payment_method or "cash",
         buyer_email=current_user.email,
-        delivery_type=order_in.delivery_type or "delivery",
+        delivery_type=delivery_type,
         preferred_date=preferred_date,
+        preferred_time=order_in.preferred_time or None,
     )
     db.add(order)
     db.flush()
@@ -93,12 +102,18 @@ def create_order(
             product_list = ", ".join(product_names)
         else:
             product_list = ", ".join(product_names[:2]) + f" and {len(product_names) - 2} more"
-        delivery_type = (order_in.delivery_type or "delivery").lower()
-        type_label = "Delivery" if delivery_type == "delivery" else "Pickup"
+        type_label = "Schedule Delivery" if delivery_type == "schedule_delivery" else (
+            "Express Delivery" if delivery_type == "express_delivery" else "Pickup"
+        )
         date_str = ""
         if preferred_date:
             date_str = f" on {preferred_date.strftime('%d %b %Y')}"
-        msg = f"New order #{order.id} ({type_label}{date_str}): {product_list}. Total: ₹{total_amount:.2f}"
+        time_str = ""
+        if order_in.preferred_time:
+            time_str = f" (Preferred time: {order_in.preferred_time})"
+        msg = f"New order #{order.id} ({type_label}{date_str}{time_str}): {product_list}. Total: ₹{total_amount:.2f}"
+        if delivery_type == "express_delivery":
+            msg = f"🚨 EXPRESS / URGENT — {msg}"
         for fid in farmer_ids:
             db.add(OrderNotification(user_id=fid, order_id=order.id, message=msg))
     except Exception as e:

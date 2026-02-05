@@ -3,17 +3,17 @@
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
 
-# Database ORM & Driver
+# Database ORM & Driver (psycopg3 has wheels for Python 3.14; psycopg2-binary requires MSVC)
 SQLAlchemy==2.0.36
-psycopg2-binary==2.9.10
+psycopg[binary]>=3.1
 
 # Authentication & Securityp
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 
-# Data Validation & Settings
-pydantic==2.9.2
-pydantic-settings==2.6.1
+# Data Validation & Settings (use Python 3.11 or 3.12 for pre-built wheels)
+pydantic>=2.9.2,<3
+pydantic-settings>=2.6.1
 
 # RSS Feed Parsing
 feedparser==6.0.11

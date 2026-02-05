@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     app_name: str = "KissanConnect API"
     debug: bool = True
 
-    database_url: str = "postgresql+psycopg2://postgres:admin1969@localhost:5432/kissanconnect"
+    database_url: str = "postgresql+psycopg://postgres:admin1969@localhost:5432/kissanconnect"
     secret_key: str = "CHANGE_THIS_SECRET"
     access_token_expire_minutes: int = 60
     algorithm: str = "HS256"

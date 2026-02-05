@@ -1,5 +1,5 @@
 """Run migration: products.min_negotiable_price, negotiations, negotiation_messages."""
-import psycopg2
+import psycopg
 import sys
 
 DB_NAME = "kissanconnect"
@@ -10,7 +10,7 @@ DB_PORT = "5432"
 
 def run():
     try:
-        conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
+        conn = psycopg.connect(dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
         conn.autocommit = True
         cur = conn.cursor()
         cur.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS min_negotiable_price NUMERIC(10, 2) NULL")

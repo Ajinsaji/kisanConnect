@@ -154,6 +154,14 @@ async def startup_event():
                     logger.info("✓ Added preferred_date column")
                 else:
                     logger.info("✓ preferred_date column already exists")
+
+                if 'preferred_time' not in columns:
+                    logger.info("Adding preferred_time column to orders table...")
+                    with engine.begin() as conn:
+                        conn.execute(text("ALTER TABLE orders ADD COLUMN preferred_time VARCHAR(50)"))
+                    logger.info("✓ Added preferred_time column")
+                else:
+                    logger.info("✓ preferred_time column already exists")
             
             # Auto-migrate complaints table if needed
             if 'complaints' in inspector.get_table_names():

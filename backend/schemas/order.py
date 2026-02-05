@@ -36,8 +36,9 @@ class OrderCreate(BaseModel):
     items: list[OrderItemBase]
     shipping_address: str | None = None
     payment_method: str = "cash"
-    delivery_type: str = "delivery"
+    delivery_type: str = "delivery"  # schedule_delivery | express_delivery | pickup
     preferred_date: str | None = None
+    preferred_time: str | None = None  # e.g. "09:00-12:00" or "Morning"
 
 
 class OrderRead(BaseModel):
@@ -54,6 +55,7 @@ class OrderRead(BaseModel):
     cancellation_reason: str | None = None
     delivery_type: str | None = None
     preferred_date: date | None = None
+    preferred_time: str | None = None
 
     class Config:
         from_attributes = True

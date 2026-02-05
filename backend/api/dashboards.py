@@ -154,6 +154,9 @@ def farmer_dashboard(
                     "payment_method": getattr(o, 'payment_method', None),
                     "buyer_email": getattr(o, 'buyer_email', None),
                     "cancellation_reason": getattr(o, 'cancellation_reason', None),
+                    "delivery_type": getattr(o, 'delivery_type', None),
+                    "preferred_date": str(o.preferred_date) if getattr(o, 'preferred_date', None) else None,
+                    "preferred_time": getattr(o, 'preferred_time', None),
                 }
                 
                 # Add buyer if available
@@ -323,6 +326,9 @@ def buyer_dashboard(
                     "payment_method": getattr(o, 'payment_method', None),
                     "buyer_email": getattr(o, 'buyer_email', None),
                     "cancellation_reason": getattr(o, 'cancellation_reason', None),
+                    "delivery_type": getattr(o, 'delivery_type', None),
+                    "preferred_date": str(o.preferred_date) if getattr(o, 'preferred_date', None) else None,
+                    "preferred_time": getattr(o, 'preferred_time', None),
                 }
                 
                 # Add buyer if available

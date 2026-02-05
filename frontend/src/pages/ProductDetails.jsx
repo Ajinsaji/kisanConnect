@@ -6,6 +6,7 @@ import Footer from "../components/Footer";
 import Toast from "../components/Toast";
 import { productsAPI, cartAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { getFileUrl } from "../config";
 
 function ProductDetails() {
   const { id } = useParams();
@@ -44,9 +45,10 @@ function ProductDetails() {
       const data = await productsAPI.get(parseInt(id));
       setProduct(data);
       // Filter out blob URLs
-      setSelectedImage(data.image_url && !data.image_url.startsWith('blob:') 
-        ? data.image_url 
-        : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23e5e7eb' width='400' height='400'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%236b7280' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E");
+      const placeholder = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23e5e7eb' width='400' height='400'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%236b7280' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+      setSelectedImage(data.image_url && !data.image_url.startsWith('blob:')
+        ? (data.image_url.startsWith('/') ? getFileUrl(data.image_url) : data.image_url)
+        : placeholder);
     } catch (err) {
       setError("Failed to load product");
     } finally {
@@ -139,6 +141,9 @@ function ProductDetails() {
             src={selectedImage}
             alt={product.name}
             className="w-full max-w-xs mx-auto h-[180px] object-contain rounded-2xl"
+            onError={(e) => {
+              e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23e5e7eb' width='400' height='400'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%236b7280' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+            }}
           />
         </div>
 
@@ -309,7 +314,7 @@ function ProductDetails() {
               >
                 <img
                   src={p.image_url && !p.image_url.startsWith('blob:')
-                    ? p.image_url
+                    ? (p.image_url.startsWith('/') ? getFileUrl(p.image_url) : p.image_url)
                     : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23e5e7eb' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='14' fill='%236b7280' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E"}
                   alt={p.name}
                   className="h-44 w-full object-cover rounded-xl mb-4"

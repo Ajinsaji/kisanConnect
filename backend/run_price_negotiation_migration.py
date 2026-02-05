@@ -1,7 +1,7 @@
 """
 Run the price negotiation migration.
 """
-import psycopg2
+import psycopg
 import sys
 from pathlib import Path
 
@@ -23,7 +23,7 @@ def run_migration():
     try:
         # Connect to PostgreSQL
         print(f"Connecting to database '{DB_NAME}'...")
-        conn = psycopg2.connect(
+        conn = psycopg.connect(
             dbname=DB_NAME,
             user=DB_USER,
             password=DB_PASSWORD,
@@ -69,7 +69,7 @@ def run_migration():
         conn.close()
         return True
         
-    except psycopg2.Error as e:
+    except psycopg.Error as e:
         print(f"\n[ERROR] Database error: {e}")
         print("\nTroubleshooting:")
         print("1. Make sure PostgreSQL is running")

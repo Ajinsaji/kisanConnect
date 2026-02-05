@@ -44,6 +44,65 @@ class OrderStatus(str, PyEnum):
     CANCELLED = "cancelled"
 
 
+def _normalize_order_status_from_db(value):
+    """Convert any DB value (e.g. 'PENDING' or 'pending') to OrderStatus. Never raises."""
+    if value is None:
+        return None
+    if isinstance(value, OrderStatus):
+        return value
+    if not isinstance(value, str):
+        value = value.decode("utf-8") if isinstance(value, bytes) else str(value)
+    raw = value
+    value = value.lower().strip()
+    try:
+        return OrderStatus(value)
+    except (LookupError, KeyError, ValueError):
+        try:
+            name = raw.upper().strip()
+            if hasattr(OrderStatus, name):
+                return getattr(OrderStatus, name)
+        except Exception:
+            pass
+        return OrderStatus.PENDING
+
+
+class _OrderStatusEnum(Enum):
+    """Enum type that normalizes DB values to lowercase before lookup (handles 'PENDING' or 'pending')."""
+
+    def result_processor(self, dialect, coltype):
+        def process(value):
+            return _normalize_order_status_from_db(value)
+        return process
+
+
+class OrderStatusColumnType(TypeDecorator):
+    """Wraps PostgreSQL order_status enum; we own result_processor so dialect never sees raw 'PENDING'."""
+
+    impl = Enum(
+        OrderStatus,
+        name="order_status",
+        create_constraint=False,
+        native_enum=True,
+        values_callable=lambda obj: [e.value for e in obj],
+    )
+    cache_ok = True
+
+    def result_processor(self, dialect, coltype):
+        # Replace the base Enum's processor entirely so LookupError('PENDING') never happens.
+        def process(value):
+            return _normalize_order_status_from_db(value)
+        return process
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        if isinstance(value, OrderStatus):
+            return value.value
+        if isinstance(value, str):
+            return value.lower().strip()
+        return str(value).lower()
+
+
 class OrderStatusType(TypeDecorator):
     """TypeDecorator to ensure enum values (lowercase strings) are saved to database."""
     # Use String type instead of Enum to avoid SQLAlchemy's enum validation issues
@@ -189,7 +248,7 @@ class Order(Base):
         Numeric(10, 2), CheckConstraint("total_amount >= 0"), nullable=False
     )
     status: Mapped[OrderStatus] = mapped_column(
-        OrderStatusType(),
+        OrderStatusColumnType(),
         default=OrderStatus.PENDING,
         nullable=False,
     )
@@ -198,8 +257,9 @@ class Order(Base):
     payment_method: Mapped[str | None] = mapped_column(String(50), nullable=True, default="cash")
     buyer_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     cancellation_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
-    delivery_type: Mapped[str | None] = mapped_column(String(20), nullable=True, default="delivery")
+    delivery_type: Mapped[str | None] = mapped_column(String(30), nullable=True, default="delivery")
     preferred_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    preferred_time: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     buyer: Mapped[User] = relationship(back_populates="orders", lazy="joined")
     items: Mapped[list["OrderItem"]] = relationship(

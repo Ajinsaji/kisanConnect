@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 
 def run_migration():
     try:
-        import psycopg2
+        import psycopg
     except ImportError:
-        logger.error("psycopg2 required. Install with: pip install psycopg2-binary")
+        logger.error("psycopg required. Install with: pip install psycopg[binary]")
         return
     DB_HOST = os.environ.get("DB_HOST", "localhost")
     DB_NAME = os.environ.get("DB_NAME", "kissanconnect")
@@ -22,8 +22,8 @@ def run_migration():
     DB_PASSWORD = os.environ.get("DB_PASSWORD", "admin1969")
     DB_PORT = int(os.environ.get("DB_PORT", "5432"))
     try:
-        conn = psycopg2.connect(
-            host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASSWORD, port=DB_PORT
+        conn = psycopg.connect(
+            host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, port=DB_PORT
         )
         cursor = conn.cursor()
         cursor.execute("""

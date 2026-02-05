@@ -1,5 +1,6 @@
 import { useAuth } from "../context/AuthContext";
 import { cartAPI } from "../services/api";
+import { getFileUrl } from "../config";
 import { useState } from "react";
 import Toast from "./Toast";
 
@@ -41,9 +42,8 @@ function ProductCard({ product, onLoginRequired }) {
 
   // Handle image fallback - filter out blob URLs
   const placeholderImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='230' height='230'%3E%3Crect fill='%23e5e7eb' width='230' height='230'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='14' fill='%236b7280' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
-  const imageUrl = product.image_url && !product.image_url.startsWith('blob:') 
-    ? product.image_url 
-    : placeholderImage;
+  const rawUrl = product.image_url && !product.image_url.startsWith('blob:') ? product.image_url : null;
+  const imageUrl = rawUrl ? (rawUrl.startsWith('/') ? getFileUrl(rawUrl) : rawUrl) : placeholderImage;
   const displayPrice = typeof product.price === 'number' ? product.price.toFixed(2) : product.price;
 
   return (

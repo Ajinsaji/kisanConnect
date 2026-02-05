@@ -6,6 +6,7 @@ import Footer from "../components/Footer";
 import Toast from "../components/Toast";
 import RatingStars from "../components/RatingStars";
 import { productsAPI, cartAPI, messagingAPI, ratingsAPI } from "../services/api";
+import { getFileUrl } from "../config";
 import { useAuth } from "../context/AuthContext";
 
 function FarmersList() {
@@ -170,12 +171,11 @@ function FarmersList() {
                   <div className="flex-shrink-0">
                     <img
                       src={product.image_url && !product.image_url.startsWith('blob:')
-                        ? product.image_url 
+                        ? (product.image_url.startsWith('/') ? getFileUrl(product.image_url) : product.image_url)
                         : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23e5e7eb' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='14' fill='%236b7280' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E"}
                       alt={product.name}
                       className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-xl"
                       onError={(e) => {
-                        // If image fails to load, use data URI placeholder
                         e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23e5e7eb' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='14' fill='%236b7280' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
                       }}
                     />

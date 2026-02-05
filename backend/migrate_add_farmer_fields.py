@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
 Migration script to add city, state, and postal_code columns to users table.
-This uses psycopg2 directly to connect to the database.
+Uses psycopg (v3) to connect to the database.
 """
 
-import psycopg2
-from psycopg2 import sql
+import psycopg
+from psycopg import sql
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -69,7 +69,7 @@ def add_farmer_fields():
         cursor.close()
         conn.close()
             
-    except psycopg2.OperationalError as e:
+    except psycopg.OperationalError as e:
         logger.error(f"✗ Database connection failed: {e}")
         logger.error("Make sure PostgreSQL is running and credentials are correct")
         raise

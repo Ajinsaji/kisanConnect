@@ -15,12 +15,13 @@ function Checkout() {
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
   const [formData, setFormData] = useState({
-    delivery_type: 'delivery',
+    delivery_type: 'schedule_delivery',
     address: '',
     state: '',
     district: '',
     pincode: '',
     preferred_date: '',
+    preferred_time: '',
     payment_method: 'cash',
   });
   const [errors, setErrors] = useState({});
@@ -58,9 +59,11 @@ function Checkout() {
 
   const validateForm = () => {
     const newErrors = {};
-    const isDelivery = formData.delivery_type === 'delivery';
+    const needsAddress = formData.delivery_type === 'schedule_delivery' || formData.delivery_type === 'express_delivery';
+    const isExpress = formData.delivery_type === 'express_delivery';
+    const isPickup = formData.delivery_type === 'pickup';
 
-    if (isDelivery) {
+    if (needsAddress) {
       if (!formData.address.trim()) {
         newErrors.address = 'Address is required';
       } else if (formData.address.trim().length < 5) {
@@ -79,17 +82,23 @@ function Checkout() {
       }
     }
 
-    if (!formData.preferred_date.trim()) {
-      newErrors.preferred_date = formData.delivery_type === 'delivery'
+    if (!isExpress && !formData.preferred_date.trim()) {
+      newErrors.preferred_date = formData.delivery_type === 'schedule_delivery'
         ? 'Please select a preferred delivery date'
         : 'Please select a preferred pickup date';
-    } else {
+    } else if (!isExpress && formData.preferred_date.trim()) {
       const chosen = new Date(formData.preferred_date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (chosen < today) {
         newErrors.preferred_date = 'Date cannot be in the past';
       }
+    }
+
+    if (!isPickup && !formData.preferred_time.trim()) {
+      newErrors.preferred_time = isExpress
+        ? 'Please select preferred time for express delivery'
+        : 'Please select preferred time for delivery';
     }
 
     if (!formData.payment_method) {
@@ -102,20 +111,18 @@ function Checkout() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    const updates = { [name]: value };
+    if (name === 'delivery_type' && value === 'express_delivery') {
+      updates.preferred_date = new Date().toISOString().split('T')[0];
+    }
+    setFormData(prev => ({ ...prev, ...updates }));
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
     if (name === 'delivery_type' && value === 'pickup') {
       setErrors(prev => ({
         ...prev,
-        address: '',
-        state: '',
-        district: '',
-        pincode: ''
+        address: '', state: '', district: '', pincode: '', preferred_time: '',
       }));
     }
   };
@@ -130,10 +137,14 @@ function Checkout() {
 
     setProcessing(true);
     try {
-      const isDelivery = formData.delivery_type === 'delivery';
-      const shippingAddress = isDelivery
+      const needsAddress = formData.delivery_type === 'schedule_delivery' || formData.delivery_type === 'express_delivery';
+      const shippingAddress = needsAddress
         ? `${formData.address.trim()}, ${formData.district.trim()}, ${formData.state.trim()} - ${formData.pincode.trim()}`
         : null;
+
+      const preferredDate = formData.delivery_type === 'express_delivery'
+        ? new Date().toISOString().split('T')[0]
+        : (formData.preferred_date || null);
 
       const orderData = {
         items: cart.items.map(item => ({
@@ -143,7 +154,8 @@ function Checkout() {
         shipping_address: shippingAddress,
         payment_method: formData.payment_method,
         delivery_type: formData.delivery_type,
-        preferred_date: formData.preferred_date || null
+        preferred_date: preferredDate,
+        preferred_time: formData.preferred_time || null,
       };
 
       // Create order
@@ -202,25 +214,39 @@ function Checkout() {
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Checkout</h2>
 
               <form onSubmit={handlePlaceOrder} className="space-y-6">
-                {/* Delivery or Pickup */}
+                {/* Schedule Delivery / Express Delivery / Pickup */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Delivery or Pickup *</h3>
-                  <div className="flex gap-4">
-                    <label className={`flex-1 flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition ${
-                      formData.delivery_type === 'delivery' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Delivery option *</h3>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <label className={`flex-1 flex flex-col gap-1 p-4 border-2 rounded-lg cursor-pointer transition ${
+                      formData.delivery_type === 'schedule_delivery' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
                     }`}>
                       <input
                         type="radio"
                         name="delivery_type"
-                        value="delivery"
-                        checked={formData.delivery_type === 'delivery'}
+                        value="schedule_delivery"
+                        checked={formData.delivery_type === 'schedule_delivery'}
                         onChange={handleInputChange}
                         className="w-4 h-4 text-green-600"
                       />
-                      <span className="font-medium text-gray-800">Delivery</span>
-                      <span className="text-sm text-gray-500">Get it at your address</span>
+                      <span className="font-medium text-gray-800">Schedule Delivery</span>
+                      <span className="text-sm text-gray-500">Get it at your address on a date you choose</span>
                     </label>
-                    <label className={`flex-1 flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition ${
+                    <label className={`flex-1 flex flex-col gap-1 p-4 border-2 rounded-lg cursor-pointer transition ${
+                      formData.delivery_type === 'express_delivery' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:border-gray-300'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="delivery_type"
+                        value="express_delivery"
+                        checked={formData.delivery_type === 'express_delivery'}
+                        onChange={handleInputChange}
+                        className="w-4 h-4 text-amber-600"
+                      />
+                      <span className="font-medium text-gray-800">Express Delivery</span>
+                      <span className="text-sm text-gray-500">Same-day delivery — farmer will be notified as urgent</span>
+                    </label>
+                    <label className={`flex-1 flex flex-col gap-1 p-4 border-2 rounded-lg cursor-pointer transition ${
                       formData.delivery_type === 'pickup' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
                     }`}>
                       <input
@@ -237,10 +263,11 @@ function Checkout() {
                   </div>
                 </div>
 
-                {/* Schedule date for delivery / pickup */}
+                {/* Preferred date — hidden for express (auto today) */}
+                {formData.delivery_type !== 'express_delivery' && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {formData.delivery_type === 'delivery' ? 'Preferred delivery date *' : 'Preferred pickup date *'}
+                    {formData.delivery_type === 'schedule_delivery' ? 'Preferred delivery date *' : 'Preferred pickup date *'}
                   </label>
                   <input
                     type="date"
@@ -256,14 +283,53 @@ function Checkout() {
                     <p className="text-red-600 text-sm mt-1">{errors.preferred_date}</p>
                   )}
                   <p className="text-xs text-gray-500 mt-1">
-                    {formData.delivery_type === 'delivery'
+                    {formData.delivery_type === 'schedule_delivery'
                       ? 'Select when you would like to receive your order.'
                       : 'Select when you would like to pick up your order.'}
                   </p>
                 </div>
+                )}
 
-                {/* Shipping Address Form - only for delivery */}
-                {formData.delivery_type === 'delivery' && (
+                {/* Express: show today's date as fixed */}
+                {formData.delivery_type === 'express_delivery' && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm font-semibold text-amber-800">Same-day delivery</p>
+                  <p className="text-sm text-amber-700 mt-1">
+                    Date is set to today ({new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}). Choose your preferred time below.
+                  </p>
+                </div>
+                )}
+
+                {/* Preferred time for delivery / express */}
+                {formData.delivery_type !== 'pickup' && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Preferred time for delivery *
+                  </label>
+                  <select
+                    name="preferred_time"
+                    value={formData.preferred_time}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:border-green-500 ${
+                      errors.preferred_time ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  >
+                    <option value="">Select preferred time slot</option>
+                    <option value="Morning (9 AM - 12 PM)">Morning (9 AM - 12 PM)</option>
+                    <option value="Afternoon (12 PM - 5 PM)">Afternoon (12 PM - 5 PM)</option>
+                    <option value="Evening (5 PM - 9 PM)">Evening (5 PM - 9 PM)</option>
+                  </select>
+                  {errors.preferred_time && (
+                    <p className="text-red-600 text-sm mt-1">{errors.preferred_time}</p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    When would you like to receive your order?
+                  </p>
+                </div>
+                )}
+
+                {/* Shipping Address Form - for schedule delivery and express delivery */}
+                {(formData.delivery_type === 'schedule_delivery' || formData.delivery_type === 'express_delivery') && (
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">Shipping Address *</h3>
                   
@@ -427,14 +493,24 @@ function Checkout() {
                 ))}
               </div>
 
-              {/* Delivery / Pickup & date */}
+              {/* Delivery option & date & time */}
               <div className="mb-4 pb-4 border-b border-gray-200">
                 <p className="text-sm text-gray-600">
-                  <span className="font-medium text-gray-800">{formData.delivery_type === 'delivery' ? 'Delivery' : 'Pickup'}</span>
-                  {formData.preferred_date && (
+                  <span className="font-medium text-gray-800">
+                    {formData.delivery_type === 'schedule_delivery' ? 'Schedule Delivery' : formData.delivery_type === 'express_delivery' ? 'Express Delivery' : 'Pickup'}
+                  </span>
+                  {formData.delivery_type === 'express_delivery' && (
+                    <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 text-xs font-semibold rounded">Urgent</span>
+                  )}
+                  {(formData.preferred_date || formData.delivery_type === 'express_delivery') && (
                     <span className="block mt-1 text-gray-500">
-                      {formData.delivery_type === 'delivery' ? 'Preferred delivery' : 'Preferred pickup'}: {new Date(formData.preferred_date + 'T12:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {formData.delivery_type === 'express_delivery'
+                        ? `Today (${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })})`
+                        : `${formData.delivery_type === 'pickup' ? 'Pickup' : 'Delivery'} date: ${new Date((formData.preferred_date || '') + 'T12:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`}
                     </span>
+                  )}
+                  {formData.preferred_time && formData.delivery_type !== 'pickup' && (
+                    <span className="block mt-0.5 text-gray-500">Time: {formData.preferred_time}</span>
                   )}
                 </p>
               </div>
@@ -446,7 +522,7 @@ function Checkout() {
                   <span className="font-medium">₹{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-700">
-                  <span>{formData.delivery_type === 'delivery' ? 'Delivery' : 'Pickup'}</span>
+                  <span>{formData.delivery_type === 'pickup' ? 'Pickup' : 'Delivery'}</span>
                   <span className="text-green-600 font-medium">Free</span>
                 </div>
                 <div className="border-t pt-3 flex justify-between text-lg">

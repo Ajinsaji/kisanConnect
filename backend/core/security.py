@@ -123,26 +123,39 @@ async def get_current_user_from_token(token: str, db: Session) -> User:
         logger.error(f"JWT decode error: {e}")
         raise credentials_exception
 
-    # Handle admin user specially since it's not in the database
+    # Resolve admin token to a real user row so FK constraints (e.g. group_chat_messages.sender_id) work
     if token_data.user_id == "admin" and token_data.role == "admin":
-        # Create a mock admin user object
-        admin_user = User(
-            id=0,  # Use 0 as a special ID for admin
-            name="Admin",
-            email="admin@gmail.com",
-            hashed_password="",  # Not needed for admin
-            role=UserRole.ADMIN,
-            phone=None,
-            address=None,
-            city=None,
-            state=None,
-            postal_code=None,
-            is_active=True,
-            is_banned=False,
-            deactivated_by_admin=False,
-            created_at=datetime.now(timezone.utc)
+        admin_user = (
+            db.query(User)
+            .filter(User.email == "admin@gmail.com", User.role == UserRole.ADMIN)
+            .first()
         )
-        logger.info("Admin user authenticated")
+        if not admin_user:
+            admin_user = (
+                db.query(User).filter(User.role == UserRole.ADMIN).first()
+            )
+        if not admin_user:
+            # Create admin user so group chat and other FKs work (matches admin login credentials)
+            admin_user = User(
+                name="Admin",
+                email="admin@gmail.com",
+                hashed_password=get_password_hash("admin"),
+                role=UserRole.ADMIN,
+                phone=None,
+                address=None,
+                city=None,
+                state=None,
+                postal_code=None,
+                is_active=True,
+                is_banned=False,
+                deactivated_by_admin=False,
+            )
+            db.add(admin_user)
+            db.commit()
+            db.refresh(admin_user)
+            logger.info("Admin user created in database and authenticated")
+        else:
+            logger.info("Admin user authenticated (from database)")
         return admin_user
 
     user = (

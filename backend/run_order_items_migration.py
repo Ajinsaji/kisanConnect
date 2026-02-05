@@ -2,7 +2,7 @@
 Run the order_items product_id SET NULL migration.
 Allows deleting products that have been used in orders (order lines keep quantity/price).
 """
-import psycopg2
+import psycopg
 import sys
 
 DB_NAME = "kissanconnect"
@@ -14,7 +14,7 @@ DB_PORT = "5432"
 def run_migration():
     try:
         print(f"Connecting to database '{DB_NAME}'...")
-        conn = psycopg2.connect(
+        conn = psycopg.connect(
             dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD,
             host=DB_HOST, port=DB_PORT
         )
@@ -38,7 +38,7 @@ def run_migration():
         cursor.close()
         conn.close()
         return True
-    except psycopg2.Error as e:
+    except psycopg.Error as e:
         print(f"\n[ERROR] Database error: {e}")
         return False
     except Exception as e:

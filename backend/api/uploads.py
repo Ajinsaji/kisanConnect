@@ -11,8 +11,9 @@ from db.session import get_db
 
 router = APIRouter()
 
-# Create uploads directory if it doesn't exist
-UPLOAD_DIR = Path("uploads")
+# Use absolute path so uploads are always under backend/ regardless of cwd (e.g. uvicorn run from project root)
+_BACKEND_ROOT = Path(__file__).resolve().parent.parent
+UPLOAD_DIR = _BACKEND_ROOT / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 # Create subdirectories for different file types

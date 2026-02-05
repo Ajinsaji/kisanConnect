@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import FarmerLayout from '../components/FarmerLayout';
 import Toast from '../components/Toast';
 import { dashboardAPI } from '../services/api';
-import { ArrowLeftIcon, CheckCircleIcon, ClockIcon, TruckIcon, XCircleIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, CheckCircleIcon, ClockIcon, TruckIcon, XCircleIcon, MagnifyingGlassIcon, BoltIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 
 function FarmerOrders() {
   const navigate = useNavigate();
@@ -293,7 +293,13 @@ function FarmerOrders() {
                           {formatDate(order.created_at)}
                         </p>
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 flex-wrap">
+                        {order.delivery_type === 'express_delivery' && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800 border border-amber-300" title="Express delivery – prioritize this order">
+                            <BoltIcon className="w-4 h-4" />
+                            Express delivery
+                          </span>
+                        )}
                         <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 ${getStatusColor(order.status)}`}>
                           {getStatusIcon(order.status)}
                           {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || 'Unknown'}
@@ -339,7 +345,7 @@ function FarmerOrders() {
                       )}
 
                       {/* Order Summary */}
-                      <div className="grid grid-cols-2 gap-4 mb-6">
+                      <div className="grid grid-cols-2 gap-4 mb-4">
                         <div className="bg-white p-4 rounded-lg border border-gray-200">
                           <p className="text-sm text-gray-500">Subtotal</p>
                           <p className="text-lg font-semibold text-gray-800 mt-1">
@@ -353,6 +359,34 @@ function FarmerOrders() {
                           <p className="text-lg font-semibold text-gray-800 mt-1">Free</p>
                         </div>
                       </div>
+
+                      {/* Customer scheduled date & time */}
+                      {(order.preferred_date || order.preferred_time) && (order.delivery_type === 'schedule_delivery' || order.delivery_type === 'express_delivery') && (
+                        <div className="mb-6 bg-white p-4 rounded-lg border border-gray-200">
+                          <h4 className="text-sm font-semibold text-gray-700 mb-2">Scheduled date & time</h4>
+                          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-800">
+                            {order.preferred_date && (
+                              <span className="inline-flex items-center gap-1.5">
+                                <CalendarDaysIcon className="w-4 h-4 text-green-600" />
+                                {(() => {
+                                  try {
+                                    const d = order.preferred_date.split('T')[0];
+                                    return new Date(d + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                                  } catch {
+                                    return order.preferred_date;
+                                  }
+                                })()}
+                              </span>
+                            )}
+                            {order.preferred_time && (
+                              <span className="inline-flex items-center gap-1.5">
+                                <ClockIcon className="w-4 h-4 text-green-600" />
+                                {order.preferred_time}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Customer Info */}
                       {order.buyer && (
@@ -378,7 +412,15 @@ function FarmerOrders() {
                       {/* Delivery Address */}
                       {order.shipping_address && (
                         <div className="mb-6 bg-white p-4 rounded-lg border border-gray-200">
-                          <h4 className="text-sm font-semibold text-gray-700 mb-2">Delivery Address</h4>
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="text-sm font-semibold text-gray-700">Delivery Address</h4>
+                            {order.delivery_type === 'express_delivery' && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                                <BoltIcon className="w-3.5 h-3.5" />
+                                Express
+                              </span>
+                            )}
+                          </div>
                           <p className="text-sm text-gray-600 whitespace-pre-line">
                             {order.shipping_address}
                           </p>

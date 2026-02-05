@@ -3,6 +3,7 @@ import CustomerNavbar from "../components/CustomerNavbar";
 import Footer from "../components/Footer";
 import Toast from "../components/Toast";
 import { dashboardAPI, productsAPI, isTimeLockError } from "../services/api";
+import { getFileUrl } from "../config";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -227,13 +228,12 @@ function CustomerDashboard() {
                 {/* Product Image */}
                 <div className="relative h-48 bg-gradient-to-br from-green-100 to-green-50">
                   <img
-                    src={category.image && !category.image.startsWith('blob:') 
-                      ? category.image 
+                    src={category.image && !category.image.startsWith('blob:')
+                      ? (category.image.startsWith('/') ? getFileUrl(category.image) : category.image)
                       : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23d1fae5' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='18' fill='%23059669' text-anchor='middle' dy='.3em'%3EFresh Product%3C/text%3E%3C/svg%3E"}
                     alt={category.name}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      // If image fails to load, use data URI placeholder
                       e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23d1fae5' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='18' fill='%23059669' text-anchor='middle' dy='.3em'%3EFresh Product%3C/text%3E%3C/svg%3E";
                     }}
                   />
